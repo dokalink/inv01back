@@ -18,7 +18,7 @@ router.get('/api/rss', (req, res) => {
       mm.push({
         title: item.title ? item.title : '',
         link: item.link ? item.link : '',
-        img: item.enclosure.url ? item.enclosure.url : '',
+        img: item.enclosure ? item.enclosure.url : '',
         content: item.content ? item.content : '',
         contentSnippet: item.contentSnippet ? item.contentSnippet : '',
       });
@@ -26,6 +26,5 @@ router.get('/api/rss', (req, res) => {
     await res.json(mm);
   })();
 });
-
 
 module.exports = router;
