@@ -21,6 +21,7 @@ router.get('/api/rss', (req, res) => {
         img: item.enclosure ? item.enclosure.url : '',
         content: item.content ? item.content : '',
         contentSnippet: item.contentSnippet ? item.contentSnippet : '',
+        date: item.isoDate ? new Date(item.isoDate).toLocaleDateString() : '',
       });
     });
     await res.json(mm);
