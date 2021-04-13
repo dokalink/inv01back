@@ -1,12 +1,28 @@
 const express = require('express');
 const Parser = require('rss-parser');
+const mcache = require('memory-cache');
 
 const router = express.Router();
 const parser = new Parser();
 
+const cache = (duration) => (req, res, next) => {
+  const key = `__express__${req.originalUrl}` || req.url;
+  const cachedBody = mcache.get(key);
+  if (cachedBody) {
+    res.send(cachedBody);
+  } else {
+    res.sendResponse = res.send;
+    res.send = (body) => {
+      mcache.put(key, body, duration * 1000);
+      res.sendResponse(body);
+    };
+    next();
+  }
+};
+
 // https://inv01back.herokuapp.com/
 
-router.get('/api/rss', (req, res) => {
+router.get('/api/rss', cache(3600), (req, res) => {
   (async () => {
     const rssMos = await parser.parseURL('https://www.mos.ru/rss');
     const rssLenta = await parser.parseURL('https://lenta.ru/rss/news');
