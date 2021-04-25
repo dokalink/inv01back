@@ -22,6 +22,21 @@ const cache = (duration) => (req, res, next) => {
 
 // https://inv01back.herokuapp.com/
 
+function extractDate(mas = []) {
+  const masTmp = [];
+  mas.forEach((item) => {
+    masTmp.push({
+      title: item.title ? item.title : '',
+      link: item.link ? item.link : '',
+      img: item.enclosure ? item.enclosure.url : '',
+      content: item.content ? item.content : '',
+      contentSnippet: item.contentSnippet ? item.contentSnippet : '',
+      date: item.isoDate ? new Date(item.isoDate).toLocaleDateString('ru') : '',
+    });
+  });
+  return masTmp;
+}
+
 router.get('/api/rss', cache(3600), (req, res) => {
   (async () => {
     const rssMos = await parser.parseURL('https://www.mos.ru/rss');
@@ -41,6 +56,15 @@ router.get('/api/rss', cache(3600), (req, res) => {
       });
     });
     await res.json(mm);
+  })();
+});
+
+router.get('/api/rss2', cache(3600), (req, res) => {
+  (async () => {
+    const rssMos = await parser.parseURL('https://www.mos.ru/rss');
+    const rssLenta = await parser.parseURL('https://lenta.ru/rss/news');
+    const masReturn = { mos: extractDate(rssMos.items), lenta: extractDate(rssLenta.items) };
+    await res.json(masReturn);
   })();
 });
 
