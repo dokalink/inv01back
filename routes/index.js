@@ -44,8 +44,8 @@ router.get('/api/rss', cache(3600), (req, res) => {
       let mas = [];
       const rssMos = await parser.parseURL('https://www.mos.ru/rss');
       const rssLenta = await parser.parseURL('https://lenta.ru/rss/news');
-      mas = extractDate(rssMos.items, 'www.lenta.ru')
-        .concat(extractDate(rssLenta.items, 'www.mos.ru'));
+      mas = extractDate(rssMos.items, 'www.mos.ru')
+        .concat(extractDate(rssLenta.items, 'www.lenta.ru'));
       await res.json(mas.sort((a, b) => new Date(b.isoDate) - new Date(a.isoDate)));
     } catch (e) {
       console.log(e);
