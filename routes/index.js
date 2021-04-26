@@ -22,10 +22,11 @@ const cache = (duration) => (req, res, next) => {
 
 // https://inv01back.herokuapp.com/
 
-function extractDate(mas = []) {
+function extractDate(mas = [], linkdom = '') {
   const masTmp = [];
   mas.forEach((item) => {
     masTmp.push({
+      linkdom,
       title: item.title ? item.title : '',
       link: item.link ? item.link : '',
       img: item.enclosure ? item.enclosure.url : '',
@@ -37,6 +38,22 @@ function extractDate(mas = []) {
   return masTmp;
 }
 
+router.get('/api/rss', cache(3600), (req, res) => {
+  (async () => {
+    try {
+      let mas = [];
+      const rssMos = await parser.parseURL('https://www.mos.ru/rss');
+      const rssLenta = await parser.parseURL('https://lenta.ru/rss/news');
+      mas = extractDate(rssMos.items, 'www.lenta.ru')
+        .concat(extractDate(rssLenta.items, 'www.mos.ru'));
+      await res.json(mas.sort((a, b) => new Date(b.isoDate) - new Date(a.isoDate)));
+    } catch (e) {
+      console.log(e);
+    }
+  })();
+});
+
+/*
 router.get('/api/rss', cache(3600), (req, res) => {
   (async () => {
     const rssMos = await parser.parseURL('https://www.mos.ru/rss');
@@ -58,6 +75,9 @@ router.get('/api/rss', cache(3600), (req, res) => {
     await res.json(mm);
   })();
 });
+*/
+
+/* 2 Вариант с раздельными RSS. Оставил первый пока, добавил в него признак канала, так лучше для фильтра
 
 router.get('/api/rss2', cache(3600), (req, res) => {
   (async () => {
@@ -67,5 +87,6 @@ router.get('/api/rss2', cache(3600), (req, res) => {
     await res.json(masReturn);
   })();
 });
+*/
 
 module.exports = router;
