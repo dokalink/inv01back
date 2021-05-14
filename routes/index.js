@@ -38,55 +38,30 @@ function extractDate(mas = [], linkdom = '') {
   return masTmp;
 }
 
-router.get('/api/rss', cache(3600), (req, res) => {
+router.get('/api/rss', cache(3600), (req, res, next) => {
   (async () => {
+    let mas = [];
+    let rssMos = [];
+    let rssLenta = [];
+
     try {
-      let mas = [];
-      const rssMos = await parser.parseURL('https://www.mos.ru/rss');
-      const rssLenta = await parser.parseURL('https://lenta.ru/rss/news');
-      mas = extractDate(rssMos.items, 'www.mos.ru')
-        .concat(extractDate(rssLenta.items, 'www.lenta.ru'));
-      await res.json(mas.sort((a, b) => new Date(b.isoDate) - new Date(a.isoDate)));
+      rssMos = await parser.parseURL('https://www.mos.ru/rss');
     } catch (e) {
-      console.log(e);
+      console.log('ERROR: www.mos.ru/rss');
+      return next(e);
     }
+    try {
+      rssLenta = await parser.parseURL('https://lenta.ru/rss/news');
+    } catch (e) {
+      console.log('ERROR: lenta.ru/rss/news');
+      return next(e);
+    }
+
+    mas = extractDate(rssMos.items, 'www.mos.ru')
+      .concat(extractDate(rssLenta.items, 'www.lenta.ru'));
+
+    await res.json(mas.sort((a, b) => new Date(b.isoDate) - new Date(a.isoDate)));
   })();
 });
-
-/*
-router.get('/api/rss', cache(3600), (req, res) => {
-  (async () => {
-    const rssMos = await parser.parseURL('https://www.mos.ru/rss');
-    const rssLenta = await parser.parseURL('https://lenta.ru/rss/news');
-    const mas = rssMos.items.concat(rssLenta.items).sort(
-      (a, b) => new Date(b.isoDate) - new Date(a.isoDate),
-    );
-    const mm = [];
-    mas.forEach((item) => {
-      mm.push({
-        title: item.title ? item.title : '',
-        link: item.link ? item.link : '',
-        img: item.enclosure ? item.enclosure.url : '',
-        content: item.content ? item.content : '',
-        contentSnippet: item.contentSnippet ? item.contentSnippet : '',
-        date: item.isoDate ? new Date(item.isoDate).toLocaleDateString('ru') : '',
-      });
-    });
-    await res.json(mm);
-  })();
-});
-*/
-
-/* 2 Вариант с раздельными RSS. Оставил первый пока, добавил в него признак канала, так лучше для фильтра
-
-router.get('/api/rss2', cache(3600), (req, res) => {
-  (async () => {
-    const rssMos = await parser.parseURL('https://www.mos.ru/rss');
-    const rssLenta = await parser.parseURL('https://lenta.ru/rss/news');
-    const masReturn = { mos: extractDate(rssMos.items), lenta: extractDate(rssLenta.items) };
-    await res.json(masReturn);
-  })();
-});
-*/
 
 module.exports = router;
